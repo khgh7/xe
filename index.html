@@ -1,17 +1,20 @@
 <!doctype html>
-<html lang="en-GB"><head>
+<html lang="en-GB">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Flip Currency</title>
+<title>Flip</title>
+<!-- ▼ Visitor counting: put your GoatCounter code between the quotes, e.g. "flipapp". Leave empty to switch it off. -->
+<script>window.GOATCOUNTER_CODE="";</script>
+<meta name="description" content="A simple, ad-free currency converter.">
 <meta name="theme-color" content="#0A1626">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Flip">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
@@ -25,9 +28,11 @@
   --body:"Figtree",-apple-system,"Segoe UI",system-ui,sans-serif;
   color-scheme:dark;
 }
-html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
-.app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+.app{height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
 
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-inline:16px;padding-block:10px 12px}
 .brand{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em}
@@ -73,6 +78,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-h
   background:var(--accent);animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .sel{background:rgba(79,195,247,.28);border-radius:6px;padding:0 3px;color:var(--ink)}
+.words{font-size:12.5px;font-weight:600;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .rate{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .remove{border:0;background:var(--danger);color:#2A0606;width:26px;height:26px;border-radius:50%;font:700 18px/1 var(--body);
   cursor:pointer;flex-shrink:0;display:grid;place-items:center}
@@ -81,7 +87,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-h
 .add i{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--accent);display:grid;place-items:center;font-style:normal;font-size:22px}
 .foot{font-size:11px;color:var(--muted);padding:4px 16px 16px}
 
-.dock{background:var(--bar);border-top:1px solid var(--line);padding-inline:16px;padding-block:12px 12px}
+.dock{background:var(--bar);border-top:1px solid var(--line);padding-inline:16px;padding-block:12px calc(12px + env(safe-area-inset-bottom,0px))}
 .flip{width:100%;border:0;border-radius:18px;background:var(--sun);color:var(--sun-ink);min-height:58px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--display);font-weight:700;font-size:19px;
   transition:transform .1s ease}
@@ -89,7 +95,16 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-tap-h
 .flip svg{width:22px;height:22px;transition:transform .35s cubic-bezier(.3,1.4,.5,1)}
 .flipped .flip svg{transform:rotate(180deg)}
 
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr) .62fr .62fr;gap:8px}
+.key.unit{background:var(--base);color:var(--accent);font-weight:700;font-size:19px;line-height:1;padding:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.key.unit small{font:600 9.5px var(--body);color:var(--muted)}
+.u-l{grid-column:4;grid-row:1}.u-c{grid-column:5;grid-row:1}.u-m{grid-column:4;grid-row:2}.u-b{grid-column:5;grid-row:2}
+.rate.hint{color:var(--warn);white-space:normal}
+.key.done{grid-column:4/6;grid-row:3/5;height:auto;background:var(--accent);color:var(--accent-ink);font:700 17px var(--display);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 6px 18px rgba(79,195,247,.28)}
+.key.done svg{width:26px;height:26px}
+.key.done:active{background:#7DD3FA}
 .padtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .padtop span{font-size:13px;color:var(--muted)}
 .padtop span b{color:var(--ink)}
@@ -120,10 +135,11 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-
 .pick .n{color:var(--muted);font-size:14px;flex:1;min-width:0}
 .empty{padding:24px 10px;color:var(--muted);text-align:center}
 
+[hidden]{display:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
-</head><body>
+</head>
+<body>
 <div class="app" id="app">
   <header class="top">
     <div class="brand">Flip<span>.</span></div>
@@ -142,13 +158,18 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-
       <span id="flipLabel">Flip rates</span>
     </button>
     <div id="keys" hidden>
-      <div class="padtop"><button class="chip" id="clear">Clear</button><span>Typing in <b id="typingCode"></b></span><button class="chip go" id="done">Done</button></div>
+      <div class="padtop"><button class="chip" id="clear">Clear</button><span>Typing in <b id="typingCode"></b></span></div>
       <div class="pad" id="pad">
         <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
         <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
         <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
         <button class="key" data-k="." aria-label="Decimal point">.</button>
         <button class="key" data-k="0">0</button>
+        <button class="key unit u-l" data-k="l" aria-label="Lakh">L<small>Lakh</small></button>
+        <button class="key unit u-c" data-k="c" aria-label="Crore">C<small>Crore</small></button>
+        <button class="key unit u-m" data-k="m" aria-label="Million">M<small>Million</small></button>
+        <button class="key unit u-b" data-k="b" aria-label="Billion">B<small>Billion</small></button>
+        <button class="key done" id="done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</button>
         <button class="key fn" data-k="B" aria-label="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z"/><path d="m12 9 6 6m0-6-6 6"/></svg></button>
       </div>
     </div>
@@ -164,10 +185,9 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-
   </div>
   <div class="picks" id="picks"></div>
 </div>
-
 <script>
-// Built-in rates (per 1 USD, open.er-api.com, 19 Oct 2026). Used only until newer rates arrive.
-const BUILT_IN={updated:"2026-10-19T00:02:32Z",rates:{USD:1,EUR:0.890861,GBP:0.750306,JPY:157.911394,CHF:0.824293,CAD:1.41317,AUD:1.435811,NZD:1.768993,CNY:6.69274,HKD:7.848103,SGD:1.279456,INR:95.184915,PKR:276.755441,BDT:123.400189,LKR:330.890582,AED:3.6725,SAR:3.75,QAR:3.64,KWD:0.309747,BHD:0.376,OMR:0.384497,TRY:49.543961,EGP:53.524668,MAD:9.726552,ZAR:16.461903,NGN:1331.61657,KES:129.78817,THB:33.419704,MYR:4.081565,IDR:18052.884411,PHP:63.065741,VND:25869.403572,KRW:1333.598991,TWD:32.446228,SEK:9.91606,NOK:9.435805,DKK:6.647974,PLN:3.893647,CZK:21.677301,HUF:323.526082,RON:4.738261,BGN:1.742369,ISK:121.015354,MXN:18.457069,BRL:5.072543,ARS:1514.5655,CLP:981.666438,COP:3174.489272,PEN:3.436238,ILS:3.109192,JOD:0.709,RUB:83.208148,UAH:44.860486,GEL:2.597015}};
+// Built-in rates (per 1 USD, open.er-api.com, 4 Nov 2026). Used only until newer rates arrive.
+const BUILT_IN={updated:"2026-11-04T00:02:31Z",rates:{AED:3.6725,ARS:1549.7194,AUD:1.434205,BDT:124.496963,BGN:1.747547,BHD:0.376,BRL:5.48609,CAD:1.399422,CHF:0.820009,CLP:978.112665,CNY:6.684036,COP:3221.311219,CZK:21.757265,DKK:6.680451,EGP:55.370618,EUR:0.893426,GBP:0.745418,GEL:2.595476,HKD:7.845778,HUF:325.892843,IDR:18140.247665,ILS:3.164114,INR:94.834253,ISK:121.706697,JOD:0.709,JPY:158.39919,KES:129.975909,KRW:1343.930997,KWD:0.311167,LKR:332.444906,MAD:9.822838,MXN:18.737449,MYR:4.076971,NGN:1346.069771,NOK:9.280833,NZD:1.783786,OMR:0.384497,PEN:3.464766,PHP:63.519923,PKR:276.527777,PLN:3.945126,QAR:3.64,RON:4.772099,RUB:81.415956,SAR:3.75,SEK:9.79114,SGD:1.281123,THB:33.757532,TRY:50.042701,TWD:32.770816,UAH:45.680667,USD:1,VND:25769.065289,ZAR:16.617144}};
 
 const CUR={USD:["US dollar","US"],EUR:["Euro","EU"],GBP:["British pound","GB"],JPY:["Japanese yen","JP"],CHF:["Swiss franc","CH"],CAD:["Canadian dollar","CA"],AUD:["Australian dollar","AU"],NZD:["New Zealand dollar","NZ"],CNY:["Chinese yuan","CN"],HKD:["Hong Kong dollar","HK"],SGD:["Singapore dollar","SG"],INR:["Indian rupee","IN"],PKR:["Pakistani rupee","PK"],BDT:["Bangladeshi taka","BD"],LKR:["Sri Lankan rupee","LK"],AED:["UAE dirham","AE"],SAR:["Saudi riyal","SA"],QAR:["Qatari riyal","QA"],KWD:["Kuwaiti dinar","KW"],BHD:["Bahraini dinar","BH"],OMR:["Omani rial","OM"],TRY:["Turkish lira","TR"],EGP:["Egyptian pound","EG"],MAD:["Moroccan dirham","MA"],ZAR:["South African rand","ZA"],NGN:["Nigerian naira","NG"],KES:["Kenyan shilling","KE"],THB:["Thai baht","TH"],MYR:["Malaysian ringgit","MY"],IDR:["Indonesian rupiah","ID"],PHP:["Philippine peso","PH"],VND:["Vietnamese dong","VN"],KRW:["South Korean won","KR"],TWD:["New Taiwan dollar","TW"],SEK:["Swedish krona","SE"],NOK:["Norwegian krone","NO"],DKK:["Danish krone","DK"],PLN:["Polish złoty","PL"],CZK:["Czech koruna","CZ"],HUF:["Hungarian forint","HU"],RON:["Romanian leu","RO"],BGN:["Bulgarian lev","BG"],ISK:["Icelandic króna","IS"],MXN:["Mexican peso","MX"],BRL:["Brazilian real","BR"],ARS:["Argentine peso","AR"],CLP:["Chilean peso","CL"],COP:["Colombian peso","CO"],PEN:["Peruvian sol","PE"],ILS:["Israeli shekel","IL"],JOD:["Jordanian dinar","JO"],RUB:["Russian rouble","RU"],UAH:["Ukrainian hryvnia","UA"],GEL:["Georgian lari","GE"]};
 const DEFAULT_LIST=["GBP","USD","EUR","CNY","PKR","AED","SAR","MAD","INR"];
@@ -177,8 +197,9 @@ const store={get(k){try{return JSON.parse(localStorage.getItem("flip."+k))}catch
 
 let rates=store.get("rates");
 if(!rates||!rates.rates||new Date(rates.updated)<new Date(BUILT_IN.updated))rates=BUILT_IN;
+if(!rates.rates.USD)rates=BUILT_IN;
 const saved=store.get("list")||{};
-let list=Array.isArray(saved.list)?saved.list.filter(c=>CUR[c]):DEFAULT_LIST.slice();
+let list=Array.isArray(saved.list)?saved.list.filter(c=>rates.rates[c]):DEFAULT_LIST.slice();
 if(!list.length)list=DEFAULT_LIST.slice();
 let base=list.includes(saved.base)?saved.base:list[0];
 let input=typeof saved.input==="string"?saved.input:"1";
@@ -186,22 +207,63 @@ let inverse=!!saved.inverse;
 let typing=false, editing=false, fresh=false;
 
 const $=id=>document.getElementById(id);
-const flagOf=c=>CUR[c][1].replace(/./g,ch=>String.fromCodePoint(127397+ch.charCodeAt(0)));
+let regionNames=null,curNames=null;
+try{regionNames=new Intl.DisplayNames(["en-GB"],{type:"region"});curNames=new Intl.DisplayNames(["en-GB"],{type:"currency"});}catch(e){}
+function nameOf(c){
+  if(CUR[c])return CUR[c][0];
+  try{const n=curNames&&curNames.of(c);if(n&&n!==c)return n.charAt(0).toUpperCase()+n.slice(1);}catch(e){}
+  return c;
+}
+function flagOf(c){
+  let r=CUR[c]?CUR[c][1]:null;
+  if(!r&&c[0]!=="X"){const cand=c.slice(0,2);try{if(regionNames&&regionNames.of(cand)!==cand)r=cand;}catch(e){}}
+  return r?r.replace(/./g,ch=>String.fromCodePoint(127397+ch.charCodeAt(0))):"🌐";
+}
 const save=()=>store.set("list",{list,base,input,inverse});
 const rateOf=(a,b)=>rates.rates[b]/rates.rates[a];
-const nf=(o)=>new Intl.NumberFormat("en-GB",o);
+// Rupees use South Asian grouping (1,00,000) and lakh/crore wording
+const WORDS={INR:[[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]],
+             PKR:[[1e11,"kharab"],[1e9,"arab"],[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]]};
+const SOUTH_ASIAN={INR:1,PKR:1};
+const nf=(o,c)=>new Intl.NumberFormat(c&&SOUTH_ASIAN[c]?"en-IN":"en-GB",o);
+function words(n,c){
+  const steps=WORDS[c];
+  if(!steps||!isFinite(n)||n<1000)return "";
+  // largest two units, e.g. 36 crore 92 lakh
+  let r=Math.floor(n);const parts=[];
+  for(const [v,w] of steps){
+    if(r>=v){const q=Math.floor(r/v);r-=q*v;parts.push(new Intl.NumberFormat("en-IN").format(q)+" "+w);if(parts.length===2)break;}
+  }
+  return parts.join(" ");
+}
 
-function fmtResult(n){
+function fmtResult(n,c){
   if(!isFinite(n))return "–";
   if(n===0)return "0.00";
-  if(n>=1)return nf({minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
-  return nf({maximumSignificantDigits:4}).format(n);
+  if(n>=1)return nf({minimumFractionDigits:2,maximumFractionDigits:2},c).format(n);
+  return nf({maximumSignificantDigits:4},c).format(n);
 }
-function fmtInput(s){
-  if(s==="")return "0";
-  const [i,d]=s.split(".");
-  return nf({maximumFractionDigits:0}).format(Number(i||0))+(d!==undefined?"."+d:"");
+// Amounts can use units: L (lakh), C (crore), M (million), B (billion).
+// e.g. 1.7M = 1,700,000 · 1C50L = 1 crore 50 lakh. A number must come between units,
+// lakh/crore can't mix with million/billion, and a second unit must be the smaller one.
+const UNIT={L:1e5,C:1e7,M:1e6,B:1e9};
+const FAMILY={L:"sa",C:"sa",M:"w",B:"w"};
+const UNAME={L:"lakh",C:"crore",M:"million",B:"billion"};
+const norm=s=>String(s||"").replace(/\s+/g,"").toUpperCase().replace(/[^0-9.LCMB]/g,"");
+const segsOf=s=>norm(s).match(/[0-9.]*[LCMB]|[0-9.]+$/g)||[];
+const parseAmt=s=>{let v=0;for(const g of segsOf(s)){const u=/[LCMB]$/.test(g)?g.slice(-1):"";v+=Number((u?g.slice(0,-1):g)||0)*(UNIT[u]||1);}return isFinite(v)?v:0;};
+const hasUnits=s=>/[LCMB]/.test(norm(s));
+function fmtInput(s,c){
+  const segs=segsOf(s);
+  if(!segs.length)return "0";
+  return segs.map(g=>{
+    const u=/[LCMB]$/.test(g)?g.slice(-1):"";const num=u?g.slice(0,-1):g;
+    const [i,d]=num.split(".");
+    return nf({maximumFractionDigits:0},c).format(Number(i||0))+(d!==undefined?"."+d:"")+u;
+  }).join(" ");
 }
+let hint="",hintT=0;
+function nope(msg){hint=msg;clearTimeout(hintT);hintT=setTimeout(()=>{hint="";render();},2200);render();}
 const fmtRate=r=>nf({maximumSignificantDigits:5}).format(r);
 const sizeClass=t=>"amt"+(t.length>14?" xs":t.length>11?" s":"");
 
@@ -213,7 +275,8 @@ function render(){
   $("editBtn").textContent=editing?"Done":"Edit";
   $("flipLabel").textContent=inverse?"Show rates per "+base:"Flip rates";
   const L=$("list");L.innerHTML="";
-  const amount=Number(input||0);
+  const amount=parseAmt(input);
+  const hasUnit=hasUnits(input);
   list.forEach(c=>{
     const isBase=c===base;
     const row=el("div","row"+(isBase?" is-base":""));
@@ -222,16 +285,19 @@ function render(){
       const x=el("button","remove","−");x.dataset.remove=c;x.setAttribute("aria-label","Remove "+c);row.append(x);
     }
     const f=el("span","flag",flagOf(c));
-    const who=el("div","who");who.append(el("div","code",c),el("div","name",CUR[c][0]));
+    const who=el("div","who");who.append(el("div","code",c),el("div","name",nameOf(c)));
     const val=el("div","val");
-    const text=isBase?fmtInput(input):fmtResult(amount*rateOf(base,c));
+    const text=isBase?fmtInput(input,c):fmtResult(amount*rateOf(base,c),c);
     const amtEl=el("div",sizeClass(text));
     if(isBase&&typing&&fresh){const sel=el("span","sel",text);amtEl.append(sel);}else amtEl.textContent=text;
     val.append(amtEl);
+    if(SOUTH_ASIAN[c]){const w=words(isBase?amount:amount*rateOf(base,c),c);if(w)val.append(el("div","words",w));}
     let rl;
-    if(isBase)rl=typing?(fresh?"Type a new amount":"Type an amount"):"Tap any row to convert from it";
+    if(isBase&&hint)rl=hint;
+    else if(isBase&&hasUnit)rl="= "+fmtResult(amount,c)+" "+c;
+    else if(isBase)rl=typing?(fresh?"Type a new amount":"Type an amount"):"Tap any row to convert from it";
     else rl=inverse?"1 "+c+" = "+fmtRate(rateOf(c,base))+" "+base:"1 "+base+" = "+fmtRate(rateOf(base,c))+" "+c;
-    val.append(el("div","rate",rl));
+    val.append(el("div","rate"+(isBase&&hint?" hint":""),rl));
     row.append(f,who,val);
     L.append(row);
   });
@@ -257,7 +323,7 @@ function renderStatus(){
 function selectRow(c){
   if(c!==base){
     // keep the same money value when switching the row you type in
-    const v=Number(input||0)*rateOf(base,c);
+    const v=parseAmt(input)*rateOf(base,c);
     input=v?String(Math.round(v*100)/100):"";
     base=c;
   }
@@ -361,20 +427,33 @@ $("list").addEventListener("keydown",e=>{
 });
 
 function press(k){
+  const unit="lcmb".includes(k)&&k.length===1;
   // first key after tapping a currency replaces the old amount
-  if(fresh&&k!=="B"&&k!=="C")input="";
+  if(fresh&&k!=="B"&&k!=="C"&&(!unit||hasUnits(input)))input="";
   fresh=false;
+  input=norm(input);
+  const cut=Math.max(...[..."LCMB"].map(u=>input.lastIndexOf(u)));
+  const head=input.slice(0,cut+1), tail=input.slice(cut+1);
+  const prev=cut>=0?input[cut]:"";
   if(k==="C")input="";
   else if(k==="B")input=input.slice(0,-1);
-  else if(k==="."){if(!input.includes("."))input=(input||"0")+".";}
-  else{
-    if(input.replace(/[^0-9]/g,"").length>=11)return;
-    if(input.includes(".")&&input.split(".")[1].length>=2)return;
-    input=(input==="0")?k:input+k;
+  else if(unit){
+    const U=k.toUpperCase();
+    if(prev&&tail==="")return nope("Type a number before adding another unit");
+    if(prev&&FAMILY[prev]!==FAMILY[U])return nope("Lakh and crore can't be mixed with million and billion");
+    if(prev&&UNIT[U]>=UNIT[prev])return nope("After "+UNAME[prev]+" you can only add a smaller unit");
+    if(tail===".")return nope("Type a number first");
+    input=head+(tail.replace(/\.$/,"")||"1")+U;
   }
-  save();render();
+  else if(k==="."){if(!tail.includes("."))input=head+(tail||"0")+".";}
+  else{
+    if(tail.replace(/[^0-9]/g,"").length>=11)return;
+    if(tail.includes(".")&&tail.split(".")[1].length>=2)return;
+    input=head+((tail==="0")?k:tail+k);
+  }
+  hint="";save();render();
 }
-$("pad").addEventListener("click",e=>{const b=e.target.closest(".key");if(b)press(b.dataset.k);});
+$("pad").addEventListener("click",e=>{const b=e.target.closest(".key");if(b&&b.dataset.k)press(b.dataset.k);});
 $("clear").addEventListener("click",()=>press("C"));
 $("done").addEventListener("click",()=>{typing=false;render();});
 document.addEventListener("keydown",e=>{
@@ -383,6 +462,8 @@ document.addEventListener("keydown",e=>{
   if(/^[0-9]$/.test(e.key))press(e.key);
   else if(e.key==="."||e.key===",")press(".");
   else if(e.key==="Backspace")press("B");
+  else if(/^[lcmb]$/i.test(e.key))press(e.key.toLowerCase());
+  else if(e.key===" ")e.preventDefault(); // spaces are ignored, e.g. "1.7 m"
   else if(e.key==="Escape"||e.key==="Enter"){typing=false;render();}
 });
 
@@ -398,13 +479,13 @@ function closeSheet(){$("scrim").hidden=true;$("sheet").hidden=true;}
 function buildPicks(q){
   const P=$("picks");P.innerHTML="";
   q=q.trim().toLowerCase();
-  const avail=Object.keys(CUR).filter(c=>rates.rates[c]&&!list.includes(c))
-    .filter(c=>!q||c.toLowerCase().includes(q)||CUR[c][0].toLowerCase().includes(q))
+  const avail=Object.keys(rates.rates).filter(c=>!list.includes(c))
+    .filter(c=>!q||c.toLowerCase().includes(q)||nameOf(c).toLowerCase().includes(q))
     .sort((a,b)=>q?((b.toLowerCase().startsWith(q))-(a.toLowerCase().startsWith(q))||a.localeCompare(b)):a.localeCompare(b));
   if(!avail.length){P.append(el("div","empty",q?"No currency matches “"+q+"”. Try a code like USD or a name like dollar.":"Every currency is already on your list."));return;}
   avail.forEach(c=>{
     const b=el("button","pick");b.dataset.c=c;
-    b.append(el("span","flag",flagOf(c)),el("span","c",c),el("span","n",CUR[c][0]));
+    b.append(el("span","flag",flagOf(c)),el("span","c",c),el("span","n",nameOf(c)));
     P.append(b);
   });
 }
@@ -418,19 +499,18 @@ $("scrim").addEventListener("click",closeSheet);
 
 render();
 
-// Fresh rates straight from open.er-api.com (free, daily). Last good set is cached on the phone.
-const API="https://open.er-api.com/v6/latest/USD";
+// Rates come straight from open.er-api.com (free, no key, updated daily). The last good set is kept on the phone.
+const RATES_URL="https://open.er-api.com/v6/latest/USD";
+let nextUpdate=Number(store.get("next"))||0, lastFetch=0;
 function takeRates(d){
-  if(!d||d.result!=="success"||!d.rates||!d.time_last_update_unix)return;
-  const updated=new Date(d.time_last_update_unix*1000).toISOString();
-  if(new Date(updated)>new Date(rates.updated)){
-    const pick={};Object.keys(CUR).forEach(c=>{if(typeof d.rates[c]==="number")pick[c]=d.rates[c];});
-    rates={updated,rates:Object.assign({},rates.rates,pick)};
+  if(!d||!d.rates||!d.updated||!d.rates.USD)return;
+  if(new Date(d.updated)>=new Date(rates.updated)){
+    rates={updated:d.updated,rates:d.rates};
     store.set("rates",rates);
     if(!drag)render();
   }
 }
-// Connection light: green when the rates service answers, red when it doesn't or the phone is offline.
+// Connection light: green when the internet answers, red when it doesn't.
 function setLink(state){
   const L=$("link");
   L.classList.toggle("live",state==="live");L.classList.toggle("down",state==="down");
@@ -438,28 +518,54 @@ function setLink(state){
   L.title=state==="live"?"Connected. Checked "+new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):
           state==="down"?"No connection. Showing your saved rates.":"Connecting…";
 }
-let lastFetch=0;
-async function check(){
-  renderStatus();
-  if(document.hidden)return;
-  if(!navigator.onLine){setLink("down");return;}
-  // the service updates once a day, so ask at most every 30 minutes
-  if(lastFetch&&Date.now()-lastFetch<30*60e3){setLink("live");return;}
-  const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),8000);
-  try{
-    const r=await fetch(API,{cache:"no-store",signal:ctl.signal});
-    if(!r.ok)throw new Error(r.status);
-    takeRates(await r.json());lastFetch=Date.now();setLink("live");
-  }catch(e){setLink("down");}
-  finally{clearTimeout(t);}
+const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error("timeout")),ms))]);
+async function fetchRates(){
+  lastFetch=Date.now();
+  const r=await withTimeout(fetch(RATES_URL,{cache:"no-store"}),8000);
+  if(!r.ok)throw new Error("HTTP "+r.status);
+  const j=await r.json();
+  if(j.result!=="success"||!j.rates)throw new Error("bad data");
+  nextUpdate=(j.time_next_update_unix||0)*1000;store.set("next",nextUpdate);
+  takeRates({updated:new Date(j.time_last_update_unix*1000).toISOString(),rates:j.rates});
 }
-check();
-// re-check every minute while the app is open, and whenever you come back to it
-setInterval(check,60000);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden)check();});
+async function ping(){
+  const r=await withTimeout(fetch("ping.txt?t="+Date.now(),{cache:"no-store"}),6000);
+  if(!r.ok)throw new Error("HTTP "+r.status);
+}
+let checking=false;
+async function check(force){
+  renderStatus();
+  if(document.hidden||checking)return;
+  if(!navigator.onLine){setLink("down");return;}
+  checking=true;
+  try{
+    // only download rates when the feed has published new ones (and not more than every 10 minutes)
+    const due=force||rates===BUILT_IN||Date.now()>=nextUpdate;
+    if(due&&Date.now()-lastFetch>(force?0:600000)){
+      try{await fetchRates();setLink("live");}
+      catch(e){await ping();setLink("live");}
+    }else{await ping();setLink("live");}
+  }catch(e){setLink("down");}
+  finally{checking=false;}
+}
+check(true);                                   // once when you open the app
+setInterval(()=>check(false),60000);           // every minute while it's open
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)check(false);});
 window.addEventListener("offline",()=>setLink("down"));
-window.addEventListener("online",check);
+window.addEventListener("online",()=>check(true));
 if(!navigator.onLine)setLink("down");
-if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+// works offline once installed
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+
+// optional visitor counting (GoatCounter). Fill in GOATCOUNTER_CODE at the top of this file.
+if(window.GOATCOUNTER_CODE){
+  const g=document.createElement("script");g.async=true;g.src="https://gc.zgo.at/count.js";
+  g.dataset.goatcounter="https://"+window.GOATCOUNTER_CODE+".goatcounter.com/count";
+  document.body.appendChild(g);
+}
 </script>
-</body></html>
+</body>
+</html>
