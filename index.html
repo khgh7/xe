@@ -160,9 +160,9 @@ button:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-
     <div id="keys" hidden>
       <div class="padtop"><button class="chip" id="clear">Clear</button><span>Typing in <b id="typingCode"></b></span></div>
       <div class="pad" id="pad">
-        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
-        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
         <button class="key" data-k="7">7</button><button class="key" data-k="8">8</button><button class="key" data-k="9">9</button>
+        <button class="key" data-k="4">4</button><button class="key" data-k="5">5</button><button class="key" data-k="6">6</button>
+        <button class="key" data-k="1">1</button><button class="key" data-k="2">2</button><button class="key" data-k="3">3</button>
         <button class="key" data-k="." aria-label="Decimal point">.</button>
         <button class="key" data-k="0">0</button>
         <button class="key unit u-l" data-k="l" aria-label="Lakh">L<small>Lakh</small></button>
@@ -226,9 +226,25 @@ const WORDS={INR:[[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]],
              PKR:[[1e11,"kharab"],[1e9,"arab"],[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]]};
 const SOUTH_ASIAN={INR:1,PKR:1};
 const nf=(o,c)=>new Intl.NumberFormat(c&&SOUTH_ASIAN[c]?"en-IN":"en-GB",o);
+// Other currencies: 43,323,542 -> "43.3 million"
+const BIG=[[1e12,"trillion"],[1e9,"billion"],[1e6,"million"]];
+function bigWords(n){
+  if(!isFinite(n)||n<1e6)return "";
+  for(let i=0;i<BIG.length;i++){
+    const [v,w]=BIG[i];
+    if(n>=v){
+      let x=Math.round(n/v*10)/10;
+      // 999.96 million rounds to 1,000 million: show 1 billion instead
+      if(x>=1000&&i>0)return new Intl.NumberFormat("en-GB",{maximumFractionDigits:1}).format(Math.round(n/BIG[i-1][0]*10)/10)+" "+BIG[i-1][1];
+      return new Intl.NumberFormat("en-GB",{maximumFractionDigits:1}).format(x)+" "+w;
+    }
+  }
+  return "";
+}
 function words(n,c){
   const steps=WORDS[c];
-  if(!steps||!isFinite(n)||n<1000)return "";
+  if(!steps)return bigWords(n);
+  if(!isFinite(n)||n<1000)return "";
   // largest two units, e.g. 36 crore 92 lakh
   let r=Math.floor(n);const parts=[];
   for(const [v,w] of steps){
@@ -291,7 +307,7 @@ function render(){
     const amtEl=el("div",sizeClass(text));
     if(isBase&&typing&&fresh){const sel=el("span","sel",text);amtEl.append(sel);}else amtEl.textContent=text;
     val.append(amtEl);
-    if(SOUTH_ASIAN[c]){const w=words(isBase?amount:amount*rateOf(base,c),c);if(w)val.append(el("div","words",w));}
+    {const w=words(isBase?amount:amount*rateOf(base,c),c);if(w)val.append(el("div","words",w));}
     let rl;
     if(isBase&&hint)rl=hint;
     else if(isBase&&hasUnit)rl="= "+fmtResult(amount,c)+" "+c;
