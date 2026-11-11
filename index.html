@@ -71,6 +71,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14p
 .flag.au{background:radial-gradient(circle at 32% 28%,#FFF1B8 0,#F5C542 38%,#B8860B 100%);color:#4A3200;
   font:700 15px/1 var(--display);letter-spacing:.02em;box-shadow:inset 0 -2px 4px rgba(90,60,0,.35)}
 .row.gold .code{color:#F5C542}
+.row.gold .words{white-space:normal}
 .gchips{display:flex;gap:5px;margin-top:3px}
 .gchip{border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.10);color:#F5C542;font:700 11px/1 var(--body);
   padding:4px 7px;border-radius:999px;cursor:pointer;white-space:nowrap}
@@ -266,7 +267,26 @@ function bigWords(n){
   }
   return "";
 }
+// Gold weights the way jewellers say them: 1 tola = 12 masha = 96 ratti = 11.6638 g
+function fmtGrams(g){
+  if(g>=1000)return nf({maximumFractionDigits:2}).format(g/1000)+" kg";
+  return nf({minimumFractionDigits:g<10?2:1,maximumFractionDigits:2}).format(g)+" g";
+}
+function tolaWords(t){
+  const total=t*96;                                // in ratti
+  if(total<8)return nf({maximumFractionDigits:1}).format(total)+" ratti";
+  const r=Math.round(total), T=Math.floor(r/96), M=Math.floor((r%96)/8), R=r%8;
+  return [T&&T+" tola",M&&M+" masha",R&&R+" ratti"].filter(Boolean).join(" ");
+}
+function goldWords(n){
+  if(!isFinite(n)||n<=0)return "";
+  const g=n*goldGrams(), key=G_UNITS[gUnit][0];
+  if(key==="tola")return tolaWords(n)+" · "+fmtGrams(g);
+  if(key==="g")return "";                         // already in grams
+  return fmtGrams(g);                              // ounces and 10 g packs
+}
 function words(n,c){
+  if(c==="GOLD")return goldWords(n);
   const steps=WORDS[c];
   if(!steps)return bigWords(n);
   if(!isFinite(n)||n<1000)return "";
@@ -368,7 +388,7 @@ function render(){
   L.append(add);
   const ga=new Date(gold.at);
   const gWhen=ga.toDateString()===new Date().toDateString()?ga.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):ga.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
-  L.append(el("div","foot","Gold is the international spot price (updated "+gWhen+"). Tap Tola or 24K on the gold row to change weight or purity. Jewellers add making charges and local premiums, so shop prices are higher."));
+  L.append(el("div","foot","Gold is the international spot price (updated "+gWhen+"). 1 tola = 11.66 g = 12 masha = 96 ratti. Tap Tola or 24K on the gold row to change weight or purity. Jewellers add making charges and local premiums, so shop prices are higher."));
   L.append(el("div","foot","Hold a currency and drag it to reorder. Mid-market rates for guidance; banks and bureaux add their own margin."));
   $("typingCode").textContent=base;
   $("flip").hidden=typing;$("keys").hidden=!typing;
