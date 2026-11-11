@@ -67,6 +67,15 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14p
 .row.is-base::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent)}
 .flag{width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:24px;line-height:1;flex-shrink:0}
 .who{min-width:0;flex-shrink:0;width:7.6em}
+/* gold: permanent first row */
+.flag.au{background:radial-gradient(circle at 32% 28%,#FFF1B8 0,#F5C542 38%,#B8860B 100%);color:#4A3200;
+  font:700 15px/1 var(--display);letter-spacing:.02em;box-shadow:inset 0 -2px 4px rgba(90,60,0,.35)}
+.row.gold .code{color:#F5C542}
+.gchips{display:flex;gap:5px;margin-top:3px}
+.gchip{border:1px solid rgba(245,197,66,.45);background:rgba(245,197,66,.10);color:#F5C542;font:700 11px/1 var(--body);
+  padding:4px 7px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.gchip:active{background:rgba(245,197,66,.28)}
+.gunit{font-size:.55em;font-weight:600;color:var(--muted);margin-left:5px;letter-spacing:0}
 .code{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:.01em}
 .name{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .val{flex:1;min-width:0;text-align:right}
@@ -202,7 +211,7 @@ if(!rates.rates.USD)rates=BUILT_IN;
 const saved=store.get("list")||{};
 let list=Array.isArray(saved.list)?saved.list.filter(c=>rates.rates[c]):DEFAULT_LIST.slice();
 if(!list.length)list=DEFAULT_LIST.slice();
-let base=list.includes(saved.base)?saved.base:list[0];
+let base=(saved.base==="GOLD"||list.includes(saved.base))?saved.base:list[0];
 let input=typeof saved.input==="string"?saved.input:"1";
 let inverse=!!saved.inv2;
 let typing=false, editing=false, fresh=false;
@@ -220,8 +229,23 @@ function flagOf(c){
   if(!r&&c[0]!=="X"){const cand=c.slice(0,2);try{if(regionNames&&regionNames.of(cand)!==cand)r=cand;}catch(e){}}
   return r?r.replace(/./g,ch=>String.fromCodePoint(127397+ch.charCodeAt(0))):"🌐";
 }
-const save=()=>store.set("list",{list,base,input,inv2:inverse});
-const rateOf=(a,b)=>rates.rates[b]/rates.rates[a];
+// Gold is a permanent row. Its "rate" depends on the weight unit and karat chosen on the row.
+// [saved key, chip text, grams, what one unit is called in the rate line, suffix after the amount]
+const G_UNITS=[["tola","Tola",11.6638038,"1 tola","tola"],["10g","10 g",10,"10 g","× 10 g"],["g","1 g",1,"1 g","g"],["oz","Ounce",31.1034768,"1 oz","oz"]];
+const G_KARATS=[24,22,21,18];
+const BUILT_IN_GOLD={usdOz:4048,at:"2026-11-10T22:10:00Z"}; // spot, 10 Nov 2026
+let gold=store.get("goldPrice");
+if(!gold||!(gold.usdOz>0)||new Date(gold.at)<new Date(BUILT_IN_GOLD.at))gold=BUILT_IN_GOLD;
+const gs=store.get("goldSet")||{};
+let gUnit=G_UNITS.findIndex(u=>u[0]===gs.unit);if(gUnit<0)gUnit=0;
+let gKarat=G_KARATS.indexOf(gs.karat);if(gKarat<0)gKarat=0;
+const goldGrams=()=>G_UNITS[gUnit][2];
+const goldLabel=()=>G_UNITS[gUnit][4];
+// how much gold (in the chosen unit and karat) 1 US dollar buys
+const goldPerUsd=()=>1/(gold.usdOz/31.1034768*goldGrams()*(G_KARATS[gKarat]/24));
+const R=c=>c==="GOLD"?goldPerUsd():rates.rates[c];
+const save=()=>{store.set("list",{list,base,input,inv2:inverse});store.set("goldSet",{unit:G_UNITS[gUnit][0],karat:G_KARATS[gKarat]});};
+const rateOf=(a,b)=>R(b)/R(a);
 // Rupees use South Asian grouping (1,00,000) and lakh/crore wording
 const WORDS={INR:[[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]],
              PKR:[[1e11,"kharab"],[1e9,"arab"],[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]]};
@@ -282,6 +306,7 @@ function fmtInput(s,c){
 let hint="",hintT=0;
 function nope(msg){hint=msg;clearTimeout(hintT);hintT=setTimeout(()=>{hint="";render();},2200);render();}
 const fmtRate=r=>nf({maximumSignificantDigits:5}).format(r);
+const fmtMoney=(v,c)=>nf(v>=1000?{maximumFractionDigits:0}:{minimumFractionDigits:2,maximumFractionDigits:2},c).format(v);
 const sizeClass=t=>"amt"+(t.length>14?" xs":t.length>11?" s":"");
 
 function el(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;}
@@ -294,19 +319,26 @@ function render(){
   const L=$("list");L.innerHTML="";
   const amount=parseAmt(input);
   const hasUnit=hasUnits(input);
-  list.forEach(c=>{
-    const isBase=c===base;
-    const row=el("div","row"+(isBase?" is-base":""));
+  ["GOLD",...list].forEach(c=>{
+    const isBase=c===base, isGold=c==="GOLD";
+    const row=el("div","row"+(isBase?" is-base":"")+(isGold?" gold":""));
     row.dataset.c=c;row.setAttribute("role","listitem");row.tabIndex=0;
-    if(editing){
+    if(editing&&!isGold){
       const x=el("button","remove","−");x.dataset.remove=c;x.setAttribute("aria-label","Remove "+c);row.append(x);
     }
-    const f=el("span","flag",flagOf(c));
-    const who=el("div","who");who.append(el("div","code",c),el("div","name",nameOf(c)));
+    const f=isGold?el("span","flag au","Au"):el("span","flag",flagOf(c));
+    const who=el("div","who");
+    if(isGold){
+      const chips=el("div","gchips");
+      const u=el("button","gchip",G_UNITS[gUnit][1]);u.dataset.gunit="1";u.setAttribute("aria-label","Change gold weight, now "+G_UNITS[gUnit][1]);
+      const k=el("button","gchip",G_KARATS[gKarat]+"K");k.dataset.gkarat="1";k.setAttribute("aria-label","Change gold purity, now "+G_KARATS[gKarat]+" karat");
+      chips.append(u,k);who.append(el("div","code","Gold"),chips);
+    }else who.append(el("div","code",c),el("div","name",nameOf(c)));
     const val=el("div","val");
     const text=isBase?fmtInput(input,c):fmtResult(amount*rateOf(base,c),c);
     const amtEl=el("div",sizeClass(text));
     if(isBase&&typing&&fresh){const sel=el("span","sel",text);amtEl.append(sel);}else amtEl.textContent=text;
+    if(isGold)amtEl.append(el("span","gunit",goldLabel()));
     val.append(amtEl);
     {const w=words(isBase?amount:amount*rateOf(base,c),c);if(w)val.append(el("div","words",w));}
     let rl;
@@ -318,7 +350,11 @@ function render(){
       // e.g. typing in PKR, the GBP row reads "1 GBP = 370.97 PKR". Flip turns them all round.
       const r=rateOf(c,base);
       const big=(r>=1)!==inverse;
-      rl=big?["1 "+c+" = ",fmtRate(r)," "+base]:["1 "+base+" = ",fmtRate(1/r)," "+c];
+      const one=x=>x==="GOLD"?G_UNITS[gUnit][3]+" "+G_KARATS[gKarat]+"K":"1 "+x;
+      const unitOf=x=>x==="GOLD"?goldLabel():x;
+      // gold prices read as whole money amounts, e.g. 1 tola 24K = 4,19,762 PKR
+      const num=(v,cur)=>(c==="GOLD"||base==="GOLD")&&cur!=="GOLD"?fmtMoney(v,cur):fmtRate(v);
+      rl=big?[one(c)+" = ",num(r,base)," "+unitOf(base)]:[one(base)+" = ",num(1/r,c)," "+unitOf(c)];
     }
     const rateEl=el("div","rate"+(isBase&&hint?" hint":""));
     if(Array.isArray(rl)){rateEl.append(document.createTextNode(rl[0]),el("b",null,rl[1]),document.createTextNode(rl[2]));}
@@ -330,6 +366,9 @@ function render(){
   const add=el("button","add");add.id="addBtn";
   const plus=el("i",null,"+");add.append(plus,document.createTextNode("Add a currency"));
   L.append(add);
+  const ga=new Date(gold.at);
+  const gWhen=ga.toDateString()===new Date().toDateString()?ga.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):ga.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+  L.append(el("div","foot","Gold is the international spot price (updated "+gWhen+"). Tap Tola or 24K on the gold row to change weight or purity. Jewellers add making charges and local premiums, so shop prices are higher."));
   L.append(el("div","foot","Hold a currency and drag it to reorder. Mid-market rates for guidance; banks and bureaux add their own margin."));
   $("typingCode").textContent=base;
   $("flip").hidden=typing;$("keys").hidden=!typing;
@@ -350,7 +389,7 @@ function selectRow(c){
   if(c!==base){
     // keep the same money value when switching the row you type in
     const v=parseAmt(input)*rateOf(base,c);
-    input=v?String(Math.round(v*100)/100):"";
+    input=v?String(c==="GOLD"?Math.round(v*1000)/1000:Math.round(v*100)/100):"";
     base=c;
   }
   typing=true;fresh=true;save();render();
@@ -366,7 +405,7 @@ function startPress(row,y){
 function cancelPress(){if(hold){clearTimeout(hold.timer);hold=null;}}
 function lift(row,y){
   hold=null;
-  const rows=[...LIST.querySelectorAll(".row")];
+  const rows=[...LIST.querySelectorAll(".row:not(.gold)")];
   const from=rows.indexOf(row);
   if(from<0)return;
   drag={row,rows,from,to:from,startY:y,y,startScroll:LIST.scrollTop,h:row.offsetHeight,top:row.offsetTop,
@@ -410,7 +449,7 @@ function drop(){
 LIST.addEventListener("touchstart",e=>{
   lastTouch=Date.now();
   const row=e.target.closest(".row");
-  if(!row||e.target.closest("[data-remove]")||e.touches.length>1){cancelPress();return;}
+  if(!row||row.classList.contains("gold")||e.target.closest("[data-remove]")||e.touches.length>1){cancelPress();return;}
   startPress(row,e.touches[0].clientY);
 },{passive:true});
 document.addEventListener("touchmove",e=>{
@@ -424,7 +463,7 @@ document.addEventListener("touchcancel",()=>{lastTouch=Date.now();drop();});
 LIST.addEventListener("mousedown",e=>{
   if(Date.now()-lastTouch<800||e.button!==0)return;
   const row=e.target.closest(".row");
-  if(row&&!e.target.closest("[data-remove]"))startPress(row,e.clientY);
+  if(row&&!row.classList.contains("gold")&&!e.target.closest("[data-remove]"))startPress(row,e.clientY);
 });
 document.addEventListener("mousemove",e=>{
   if(Date.now()-lastTouch<800)return;
@@ -436,6 +475,8 @@ LIST.addEventListener("contextmenu",e=>{if(e.target.closest(".row"))e.preventDef
 
 $("list").addEventListener("click",e=>{
   if(suppressClick){suppressClick=false;e.preventDefault();return;}
+  if(e.target.closest("[data-gunit]")){gUnit=(gUnit+1)%G_UNITS.length;save();render();return;}
+  if(e.target.closest("[data-gkarat]")){gKarat=(gKarat+1)%G_KARATS.length;save();render();return;}
   const rm=e.target.closest("[data-remove]");
   if(rm){
     if(list.length<=2)return;
@@ -449,6 +490,7 @@ $("list").addEventListener("click",e=>{
 });
 $("list").addEventListener("keydown",e=>{
   const row=e.target.closest(".row");
+  if(e.target.closest(".gchip"))return;
   if(row&&(e.key==="Enter"||e.key===" ")){e.preventDefault();if(!editing)selectRow(row.dataset.c);}
 });
 
@@ -474,7 +516,7 @@ function press(k){
   else if(k==="."){if(!tail.includes("."))input=head+(tail||"0")+".";}
   else{
     if(tail.replace(/[^0-9]/g,"").length>=11)return;
-    if(tail.includes(".")&&tail.split(".")[1].length>=2)return;
+    if(tail.includes(".")&&tail.split(".")[1].length>=(base==="GOLD"?3:2))return;
     input=head+((tail==="0")?k:tail+k);
   }
   hint="";save();render();
@@ -554,6 +596,35 @@ async function fetchRates(){
   nextUpdate=(j.time_next_update_unix||0)*1000;store.set("next",nextUpdate);
   takeRates({updated:new Date(j.time_last_update_unix*1000).toISOString(),rates:j.rates});
 }
+// Gold spot price: xaus.com (free, no key, updates continuously). Backup: daily figure from the currency-api feed.
+const GOLD_URL="https://xaus.com/api/v1/spot?compact=1";
+const GOLD_BACKUP="https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json";
+let lastGold=0;
+function takeGold(usdOz,at){
+  if(!(usdOz>500&&usdOz<50000))return;          // ignore anything implausible
+  if(new Date(at)<new Date(gold.at))return;
+  gold={usdOz,at};store.set("goldPrice",gold);
+  if(!drag)render();
+}
+async function fetchGold(){
+  lastGold=Date.now();
+  try{
+    const r=await withTimeout(fetch(GOLD_URL,{cache:"no-store"}),8000);
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const p=Number(j.spot_usd_oz||(j.xau&&j.xau.unit==="oz"&&j.xau.currency==="USD"&&j.xau.price));
+    const at=j.price_as_of||j.updated_at||new Date().toISOString();
+    if(!(p>0))throw new Error("bad data");
+    takeGold(p,new Date(at).toISOString());
+  }catch(e){
+    const r=await withTimeout(fetch(GOLD_BACKUP,{cache:"no-store"}),8000);
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    const j=await r.json();
+    const x=j&&j.usd&&Number(j.usd.xau);
+    if(!(x>0))throw new Error("bad data");
+    takeGold(1/x,new Date((j.date||"")+"T00:00:00Z").toISOString());
+  }
+}
 async function ping(){
   const r=await withTimeout(fetch("ping.txt?t="+Date.now(),{cache:"no-store"}),6000);
   if(!r.ok)throw new Error("HTTP "+r.status);
@@ -567,10 +638,15 @@ async function check(force){
   try{
     // only download rates when the feed has published new ones (and not more than every 10 minutes)
     const due=force||rates===BUILT_IN||Date.now()>=nextUpdate;
+    // gold moves all day, so refresh it every 5 minutes while the app is open
+    const goldDue=force||Date.now()-lastGold>300000;
+    let ok=false;
+    if(goldDue){try{await fetchGold();ok=true;}catch(e){}}
     if(due&&Date.now()-lastFetch>(force?0:600000)){
-      try{await fetchRates();setLink("live");}
-      catch(e){await ping();setLink("live");}
-    }else{await ping();setLink("live");}
+      try{await fetchRates();ok=true;}catch(e){}
+    }
+    if(!ok)await ping();
+    setLink("live");
   }catch(e){setLink("down");}
   finally{checking=false;}
 }

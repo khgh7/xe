@@ -4,6 +4,8 @@ A simple, ad-free currency converter. It opens on your currencies, works with no
 
 Rates come from [open.er-api.com](https://www.exchangerate-api.com/docs/free) (free, no key needed, updated once a day). They are mid-market rates for guidance; banks and bureaux add their own margin.
 
+Gold uses the international spot price from [xaus.com](https://xaus.com/api) (free, no key), with a daily backup from the [currency-api](https://github.com/fawazahmed0/exchange-api) feed. Weights: tola (11.664 g), 10 g, 1 g and troy ounce; purity 24K, 22K, 21K or 18K. Jewellers add making charges and local premiums.
+
 ## Put it online with GitHub Pages
 
 1. Create a new **public** repository called `xe`.

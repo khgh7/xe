@@ -1,6 +1,6 @@
 // Flip offline support: keeps the app itself on the phone so it opens instantly, even with no signal.
 // Rates and the connection check always go to the network (the app keeps its own saved rates).
-const CACHE = "flip-v4";
+const CACHE = "flip-v5";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
