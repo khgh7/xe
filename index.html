@@ -80,6 +80,7 @@ body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14p
 .sel{background:rgba(79,195,247,.28);border-radius:6px;padding:0 3px;color:var(--ink)}
 .words{font-size:12.5px;font-weight:600;color:var(--sun);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .rate{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rate b{color:var(--ink);font-weight:600}
 .remove{border:0;background:var(--danger);color:#2A0606;width:26px;height:26px;border-radius:50%;font:700 18px/1 var(--body);
   cursor:pointer;flex-shrink:0;display:grid;place-items:center}
 .add{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--accent);
@@ -203,7 +204,7 @@ let list=Array.isArray(saved.list)?saved.list.filter(c=>rates.rates[c]):DEFAULT_
 if(!list.length)list=DEFAULT_LIST.slice();
 let base=list.includes(saved.base)?saved.base:list[0];
 let input=typeof saved.input==="string"?saved.input:"1";
-let inverse=!!saved.inverse;
+let inverse=!!saved.inv2;
 let typing=false, editing=false, fresh=false;
 
 const $=id=>document.getElementById(id);
@@ -219,7 +220,7 @@ function flagOf(c){
   if(!r&&c[0]!=="X"){const cand=c.slice(0,2);try{if(regionNames&&regionNames.of(cand)!==cand)r=cand;}catch(e){}}
   return r?r.replace(/./g,ch=>String.fromCodePoint(127397+ch.charCodeAt(0))):"🌐";
 }
-const save=()=>store.set("list",{list,base,input,inverse});
+const save=()=>store.set("list",{list,base,input,inv2:inverse});
 const rateOf=(a,b)=>rates.rates[b]/rates.rates[a];
 // Rupees use South Asian grouping (1,00,000) and lakh/crore wording
 const WORDS={INR:[[1e7,"crore"],[1e5,"lakh"],[1e3,"thousand"]],
@@ -289,7 +290,7 @@ function render(){
   document.body.classList.toggle("typing",typing);
   $("app").classList.toggle("flipped",inverse);
   $("editBtn").textContent=editing?"Done":"Edit";
-  $("flipLabel").textContent=inverse?"Show rates per "+base:"Flip rates";
+  $("flipLabel").textContent=inverse?"Show standard rates":"Flip rates";
   const L=$("list");L.innerHTML="";
   const amount=parseAmt(input);
   const hasUnit=hasUnits(input);
@@ -312,8 +313,17 @@ function render(){
     if(isBase&&hint)rl=hint;
     else if(isBase&&hasUnit)rl="= "+fmtResult(amount,c)+" "+c;
     else if(isBase)rl=typing?(fresh?"Type a new amount":"Type an amount"):"Tap any row to convert from it";
-    else rl=inverse?"1 "+c+" = "+fmtRate(rateOf(c,base))+" "+base:"1 "+base+" = "+fmtRate(rateOf(base,c))+" "+c;
-    val.append(el("div","rate"+(isBase&&hint?" hint":""),rl));
+    else{
+      // show the rate the readable way round: 1 of the stronger currency = n of the other
+      // e.g. typing in PKR, the GBP row reads "1 GBP = 370.97 PKR". Flip turns them all round.
+      const r=rateOf(c,base);
+      const big=(r>=1)!==inverse;
+      rl=big?["1 "+c+" = ",fmtRate(r)," "+base]:["1 "+base+" = ",fmtRate(1/r)," "+c];
+    }
+    const rateEl=el("div","rate"+(isBase&&hint?" hint":""));
+    if(Array.isArray(rl)){rateEl.append(document.createTextNode(rl[0]),el("b",null,rl[1]),document.createTextNode(rl[2]));}
+    else rateEl.textContent=rl;
+    val.append(rateEl);
     row.append(f,who,val);
     L.append(row);
   });
